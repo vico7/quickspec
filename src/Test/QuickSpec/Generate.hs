@@ -33,7 +33,7 @@ termsSatisfying p sig base =
 
 terms' :: Typeable a => (Term -> Bool) -> Sig -> TypeRel Expr -> a -> [Expr a]
 terms' p sig base w =
-  filter (\t -> size 1 (term t) <= maxSize sig && p (term t)) $
+  filter (\t -> size 0 (term t) <= maxSize sig && p (term t)) $
   map var (TypeRel.lookup w (variables sig)) ++
   map con (TypeRel.lookup w (constants sig)) ++
   [ app f x
