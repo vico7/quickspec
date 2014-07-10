@@ -1,10 +1,11 @@
-{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FlexibleInstances, GeneralizedNewtypeDeriving, DeriveDataTypeable, ScopedTypeVariables #-}
 import Data.Ratio
 import Test.QuickSpec
 import Test.QuickCheck
 import Control.Monad
 import Prelude hiding ((/), (\\))
 import qualified Prelude
+import Data.Typeable
 
 class Fractional a => Conj a where
   conj :: a -> a
@@ -34,18 +35,46 @@ instance Conj a => Fractional (a, a) where
 type Complex = (Rational, Rational)
 type Quaternion = (Complex, Complex)
 type Octonion = (Quaternion, Quaternion)
-type It = Octonion
+newtype It = It Octonion deriving (Eq, Ord, Num, Typeable, Fractional)
+newtype Fun = Fun (It -> It) deriving (Arbitrary, CoArbitrary, Typeable)
+
+instance Arbitrary It where arbitrary = fmap It it
+instance CoArbitrary It where coarbitrary (It x) = coarbitrary x
 
 (\\), (/) :: It -> It -> It
 a / b = a * recip b
 b \\ a = recip b * a
 
-main = quickSpec [
+l, r, l1, r1 :: It -> Fun
+l x = Fun (\y -> x * y)
+r x = Fun (\y -> y * x)
+l1 x = Fun (\y -> x \\ y)
+r1 x = Fun (\y -> y / x)
+
+sig1 = [
   withSize 3,
-  withDepth 4,
-  withTests 50,
-  ["a", "b", "c"] `gvars` (it `suchThat` (/= 0) :: Gen It),
+  withDepth 6,
+  withTests 10,
+  ["a", "b", "c"] `vars` (undefined :: It),
   "1" `fun0` (1 :: It),
   "*" `fun2` ((*) :: It -> It -> It),
   "/" `fun2` ((/) :: It -> It -> It),
   "\\" `fun2` ((\\) :: It -> It -> It)]
+
+sig2 = [
+  withSize 3,
+  withDepth 4,
+  withTests 10,
+  ["f", "g", "h"] `vars` (undefined :: Fun),
+  ["a", "b", "c"] `vars` (undefined :: It),
+  observer2 (\x (Fun f :: Fun) -> f x),
+  "*" `fun2` ((*) :: It -> It -> It),
+  "1" `fun0` (1 :: It),
+  "1" `blind0` (Fun (\x -> x)),
+  "." `blind2` (\(Fun f) (Fun g) -> Fun (\x -> f (g x))),
+  "l" `blind1` l,
+  "r" `blind1` r,
+  "l1" `blind1` l1,
+  "r1" `blind1` r1]
+
+main = quickSpec sig1

@@ -67,7 +67,8 @@ library
     Test.QuickSpec.Reasoning.UnionFind,
     Test.QuickSpec.Reasoning.CongruenceClosure,
     Test.QuickSpec.Reasoning.NaiveEquationalReasoning,
-    Test.QuickSpec.Reasoning.PartialEquationalReasoning,
+    Test.QuickSpec.Reasoning.Z3,
+    Test.QuickSpec.Reasoning.E,
     Test.QuickSpec.TestTotality,
     Test.QuickSpec.Utils,
     Test.QuickSpec.Utils.Typeable,
@@ -81,4 +82,4 @@ library
 
   Build-depends:
     base < 5, containers, transformers, QuickCheck >= 2.7,
-    random, spoon >= 0.2, array, ghc-prim
+    random, spoon >= 0.2, array, ghc-prim, z3, mtl, jukebox, bytestring

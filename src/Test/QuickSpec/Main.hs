@@ -1,17 +1,19 @@
 -- | The main implementation of QuickSpec.
 
-{-# LANGUAGE CPP, TypeOperators #-}
+{-# LANGUAGE CPP, TypeOperators, TypeFamilies, TypeSynonymInstances, FlexibleInstances #-}
 module Test.QuickSpec.Main where
 
 #include "errors.h"
 
 import Test.QuickSpec.Generate
-import Test.QuickSpec.Reasoning.NaiveEquationalReasoning hiding (universe, maxDepth)
+import qualified Test.QuickSpec.Reasoning.NaiveEquationalReasoning as EQ
+import qualified Test.QuickSpec.Reasoning.Z3 as Z3
+import qualified Test.QuickSpec.Reasoning.E as E
 import Test.QuickSpec.Utils.Typed
 import qualified Test.QuickSpec.Utils.TypeMap as TypeMap
 import qualified Test.QuickSpec.Utils.TypeRel as TypeRel
 import Test.QuickSpec.Signature hiding (vars)
-import Test.QuickSpec.Term hiding (symbols)
+import Test.QuickSpec.Term hiding (symbols, eval)
 import Control.Monad
 import Text.Printf
 import Data.Monoid
@@ -23,6 +25,30 @@ import Data.Maybe
 import Test.QuickSpec.Utils
 import Test.QuickSpec.Equation
 
+class Monad m => Reasoner m where
+  data Context m
+  initial :: Int -> [Symbol] -> [Tagged Term] -> Context m
+  eval :: Context m -> m a -> a
+  unify :: Equation -> m Bool
+
+instance Reasoner EQ.EQ where
+  newtype Context EQ.EQ = EQC EQ.Context
+  initial d ss univ = EQC (EQ.initial d ss univ)
+  eval (EQC x) = EQ.evalEQ x
+  unify = EQ.unify
+
+instance Reasoner Z3.EQ where
+  newtype Context Z3.EQ = Z3C Z3.Context
+  initial d ss univ = Z3C (Z3.initial d ss univ)
+  eval (Z3C x) = Z3.evalEQ x
+  unify = Z3.unify
+
+instance Reasoner E.EQ where
+  newtype Context E.EQ = EC E.Context
+  initial d ss univ = EC (E.initial d ss univ)
+  eval (EC x) = E.evalEQ x
+  unify = E.unify
+
 undefinedsSig :: Sig -> Sig
 undefinedsSig sig =
   background
@@ -32,20 +58,8 @@ undefinedsSig sig =
 universe :: [[Tagged Term]] -> [Tagged Term]
 universe css = filter (not . isUndefined . erase) (concat css)
 
-prune :: Context -> [Term] -> (a -> Equation) -> [a] -> [a]
-prune ctx reps erase eqs = evalEQ ctx (filterM (fmap not . provable . erase) eqs)
-  where
-    provable (t :=: u) = do
-      res <- t =?= u
-      if res then return True else do
-        state <- get
-        -- Check that we won't unify two representatives---if we do
-        -- the equation is false
-        t =:= u
-        reps' <- mapM rep reps
-        if sort reps' == usort reps' then return False else do
-          put state
-          return True
+prune :: Reasoner m => Context m -> [Term] -> (a -> Equation) -> [a] -> [a]
+prune ctx reps erase eqs = eval ctx (filterM (liftM not . unify . erase) eqs)
 
 defines :: Equation -> Maybe Symbol
 defines (t :=: u) = do
@@ -111,7 +125,9 @@ quickSpec = runTool $ \sig -> do
     (length eqs)
     (length reps)
 
-  let ctx = initial (maxDepth sig) (symbols sig) univ
+  let ctx1 = initial (maxDepth sig) (symbols sig) univ :: Context EQ.EQ
+      ctx2 = initial (maxDepth sig) (symbols sig) univ :: Context E.EQ
+      reps' = filter (not . isUndefined) (map erase reps)
       allEqs = map (some eraseEquation) eqs
       isBackground = all silent . eqnFuns
       keep eq = not (isBackground eq) || absurd eq
@@ -121,8 +137,9 @@ quickSpec = runTool $ \sig -> do
       (background, foreground) =
         partition isBackground allEqs
       pruned = filter keep
-                 (prune ctx (filter (not . isUndefined) (map erase reps)) id
-                   (background ++ foreground))
+                 (prune ctx2 reps' id
+                   (prune ctx1 reps' id
+                    (background ++ foreground)))
       eqnFuns (t :=: u) = funs t ++ funs u
       isGround (t :=: u) = null (vars t) && null (vars u)
       byTarget = innerZip [1 :: Int ..] (partitionBy target pruned)
