@@ -53,7 +53,7 @@ r1 x = Fun (\y -> y / x)
 
 sig1 = [
   withSize 3,
-  withDepth 6,
+  withDepth 4,
   withTests 10,
   ["a", "b", "c"] `vars` (undefined :: It),
   "1" `fun0` (1 :: It),
