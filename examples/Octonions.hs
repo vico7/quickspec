@@ -32,9 +32,9 @@ instance Conj a => Fractional (a, a) where
   fromRational x = (fromRational x, 0)
   recip x = conj x * fromRational (recip (norm x))
 
-type Complex = (Rational, Rational)
-type Quaternion = (Complex, Complex)
-type Octonion = (Quaternion, Quaternion)
+newtype Complex = Complex (Rational, Rational) deriving (Eq, Ord, Num, Typeable, Fractional, Conj, Arbitrary, CoArbitrary)
+newtype Quaternion = Quaternion (Complex, Complex) deriving (Eq, Ord, Num, Typeable, Fractional, Conj, Arbitrary, CoArbitrary)
+newtype Octonion = Octonion (Quaternion, Quaternion) deriving (Eq, Ord, Num, Typeable, Fractional, Conj, Arbitrary, CoArbitrary)
 newtype It = It Octonion deriving (Eq, Ord, Num, Typeable, Fractional)
 newtype Fun = Fun (It -> It) deriving (Arbitrary, CoArbitrary, Typeable)
 
