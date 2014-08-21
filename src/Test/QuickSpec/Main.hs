@@ -98,17 +98,22 @@ innerZip (x:xs) ((y:ys):yss) =
   let (zs:zss) = innerZip xs (ys:yss)
   in ((x,y):zs):zss
 
-isAlphaRenamed t = all ok (map (map index) (partitionBy symbolType (vars t)))
+isAlphaRenamed sig t = all ok (partitionBy symbolType (vars t)) || isCommy t
   where
-    ok [] = True
-    ok (0:xs) = ok (map (subtract 1) (filter (/= 0) xs))
-    ok _ = False
+    isCommy (Var _) = True
+    isCommy (App (Const _) (Var _)) = True
+    isCommy (App (App (Const _) (Var x)) (Var y)) | x /= y = True
+    isCommy _ = False
+    ok vs@(v:_) = ok' (map index vs) [ index v' | v' <- summaryVariables (summarise sig), symbolType v == symbolType v' ]
+    ok' [] _ = True
+    ok' (x:xs) (y:ys) | x == y = ok' (filter (/= x) xs) ys
+    ok' _ _ = False
 
 -- | Run QuickSpec on a signature.
 quickSpec :: Signature a => a -> IO ()
 quickSpec = runTool $ \sig -> do
   putStrLn "== Testing =="
-  r <- generateTermsSatisfying False isAlphaRenamed (const partialGen) sig
+  r <- generateTermsSatisfying False (isAlphaRenamed sig) (const partialGen) sig
   let clss = concatMap (some2 (map (Some . O) . classes)) (TypeMap.toList r)
       univ = concatMap (some2 (map (tagged term))) clss
       reps = map (some2 (tagged term . head)) clss
