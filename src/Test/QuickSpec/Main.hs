@@ -112,11 +112,18 @@ innerZip (x:xs) ((y:ys):yss) =
   let (zs:zss) = innerZip xs (ys:yss)
   in ((x,y):zs):zss
 
+isAlphaRenamed sig t = all ok (partitionBy symbolType (vars t))
+  where
+    ok vs@(v:_) = ok' (map index vs) [ index v' | v' <- summaryVariables (summarise sig), symbolType v == symbolType v' ]
+    ok' [] _ = True
+    ok' (x:xs) (y:ys) | x == y = ok' (filter (/= x) xs) ys
+    ok' _ _ = False
+
 -- | Run QuickSpec on a signature.
 quickSpec :: Signature a => a -> IO ()
 quickSpec = runTool $ \sig -> do
   putStrLn "== Testing =="
-  r <- generate False (const partialGen) sig
+  r <- generateTermsSatisfying False (isAlphaRenamed sig) (const partialGen) sig
   let clss = concatMap (some2 (map (Some . O) . classes)) (TypeMap.toList r)
       univ = concatMap (some2 (map (tagged term))) clss
       reps = map (some2 (tagged term . head)) clss
