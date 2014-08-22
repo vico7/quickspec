@@ -98,12 +98,8 @@ innerZip (x:xs) ((y:ys):yss) =
   let (zs:zss) = innerZip xs (ys:yss)
   in ((x,y):zs):zss
 
-isAlphaRenamed sig t = all ok (partitionBy symbolType (vars t)) || isCommy t
+isAlphaRenamed sig t = all ok (partitionBy symbolType (vars t))
   where
-    isCommy (Var _) = True
-    isCommy (App (Const _) (Var _)) = True
-    isCommy (App (App (Const _) (Var x)) (Var y)) | x /= y = True
-    isCommy _ = False
     ok vs@(v:_) = ok' (map index vs) [ index v' | v' <- summaryVariables (summarise sig), symbolType v == symbolType v' ]
     ok' [] _ = True
     ok' (x:xs) (y:ys) | x == y = ok' (filter (/= x) xs) ys
