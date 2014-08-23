@@ -69,6 +69,7 @@ library
     Test.QuickSpec.Reasoning.NaiveEquationalReasoning,
     Test.QuickSpec.Reasoning.Z3,
     Test.QuickSpec.Reasoning.E,
+    Test.QuickSpec.Reasoning.Crappy,
     Test.QuickSpec.TestTotality,
     Test.QuickSpec.Utils,
     Test.QuickSpec.Utils.Typeable,

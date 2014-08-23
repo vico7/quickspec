@@ -13,6 +13,7 @@ import Data.Ord
 import Data.Char
 import Data.List
 import Test.QuickSpec.Utils
+import Control.Monad
 
 data Symbol = Symbol {
   index :: Int,
@@ -145,6 +146,25 @@ mapConsts :: (Symbol -> Symbol) -> Term -> Term
 mapConsts f (Var x) = Var x
 mapConsts f (Const x) = Const (f x)
 mapConsts f (App t u) = App (mapConsts f t) (mapConsts f u)
+
+match, match' :: Term -> Term -> Maybe [(Symbol, Term)]
+match pat tm = do
+  s <- fmap usort (match' pat tm)
+  guard (usort (map fst s) == sort (map fst s))
+  return s
+
+match' (Var x) t = return [(x, t)]
+match' (App f x) (App g y) = liftM2 (++) (match' f g) (match' x y)
+match' (Const x) (Const y) | x == y = return []
+match' _ _ = mzero
+
+substitute :: [(Symbol, Term)] -> Term -> Term
+substitute s (Var x) =
+  case lookup x s of
+    Just t -> t
+    _ -> Var x
+substitute s (App f x) = App (substitute s f) (substitute s x)
+substitute s (Const x) = Const x
 
 data Expr a = Expr {
   term :: Term,

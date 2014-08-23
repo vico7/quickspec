@@ -9,6 +9,7 @@ import Test.QuickSpec.Generate
 import qualified Test.QuickSpec.Reasoning.NaiveEquationalReasoning as EQ
 import qualified Test.QuickSpec.Reasoning.Z3 as Z3
 import qualified Test.QuickSpec.Reasoning.E as E
+import qualified Test.QuickSpec.Reasoning.Crappy as Crappy
 import Test.QuickSpec.Utils.Typed
 import qualified Test.QuickSpec.Utils.TypeMap as TypeMap
 import qualified Test.QuickSpec.Utils.TypeRel as TypeRel
@@ -48,6 +49,12 @@ instance Reasoner E.EQ where
   initial d ss univ = EC (E.initial d ss univ)
   eval (EC x) = E.evalEQ x
   unify = E.unify
+
+instance Reasoner Crappy.EQ where
+  newtype Context Crappy.EQ = CC Crappy.Context
+  initial d ss univ = CC (Crappy.initial d ss univ)
+  eval (CC x) = Crappy.evalEQ x
+  unify = Crappy.unify
 
 undefinedsSig :: Sig -> Sig
 undefinedsSig sig =
@@ -132,7 +139,7 @@ quickSpec = runTool $ \sig -> do
     (length eqs)
     (length reps)
 
-  let ctx1 = initial (maxDepth sig) (symbols sig) univ :: Context EQ.EQ
+  let ctx1 = initial (maxDepth sig) (symbols sig) univ :: Context Crappy.EQ
       ctx2 = initial (maxDepth sig) (symbols sig) univ :: Context E.EQ
       reps' = filter (not . isUndefined) (map erase reps)
       allEqs = map (some eraseEquation) eqs
@@ -144,7 +151,7 @@ quickSpec = runTool $ \sig -> do
       (background, foreground) =
         partition isBackground allEqs
       pruned = filter keep
-                 (prune ctx2 reps' id
+                 (--prune ctx2 reps' id
                    (prune ctx1 reps' id
                     (background ++ foreground)))
       eqnFuns (t :=: u) = funs t ++ funs u
