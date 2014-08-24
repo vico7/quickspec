@@ -1,3 +1,7 @@
+Testing tree: collapse levels that don't refine any classes,
+compute a minimal test suite for distinguishing terms,
+make conversion to classes more efficient
+
 Is there some very narrow condition for when we need to substitute all
 possible values, not just representatives? Is x==y the only
 problematic case? I *think* the reasoning is as follows:
