@@ -34,7 +34,7 @@ unify :: Equation -> EQ Bool
 unify eq = do
   eqs <- get
   liftIO (putStr (show eq ++ ": ") >> hFlush stdout)
-  let opts = Jukebox.EFlags "eprover" (Just 1) Nothing
+  let opts = Jukebox.EFlags "eprover" (Just 5) Nothing
       prob = translate eqs eq
   prob' <- liftIO (Jukebox.toFofIO (Jukebox.clausifyIO (Jukebox.ClausifyFlags False)) (Jukebox.tags False) prob)
   res <- liftIO (Jukebox.runE opts prob')

@@ -62,7 +62,7 @@ mergeLists (x:xs) (y:ys)
 
 heaps :: forall a. (Ord a, Typeable a, Arbitrary a) => a -> [Sig]
 heaps a = [
-  withTests 20,
+  -- withTests 20,
   prelude a,
 
   ["h", "h1", "h2"] `vars` (undefined :: Heap a),

@@ -1,3 +1,9 @@
+Two things after testing alpha-renamed terms:
+  * Generate all permutations of representatives
+  * Check for ignored variables
+Is there any way to avoid generating some of these?
+E.g., if t[x->u] can be reduced, then x in t can't be ignored.
+
 Testing tree: collapse levels that don't refine any classes,
 compute a minimal test suite for distinguishing terms,
 make conversion to classes more efficient

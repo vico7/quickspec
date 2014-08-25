@@ -27,12 +27,13 @@ Layout xs <> Layout ys = f (init xs) (last xs) (head ys) (tail ys)
 pretty :: forall a. (Typeable a, Ord a, Arbitrary a) => a -> [Sig]
 pretty a = [
   withDepth 4,
-  withSize 6,
+  withSize 5,
   withTests 20,
   ["d","e","f"] `vars` (undefined :: Layout a),
   ["s","t","u"] `vars` (undefined :: [a]),
   ["n","m","o"] `vars` (undefined :: Int),
   "text" `fun1` (text :: [a] -> Layout a),
+  "empty" `fun0` (text [] :: Layout a),
   "nest" `fun2` (nest :: Int -> Layout a -> Layout a),
   "$$" `fun2` (($$) :: Layout a -> Layout a -> Layout a),
   "<>" `fun2` ((<>) :: Layout a -> Layout a -> Layout a),

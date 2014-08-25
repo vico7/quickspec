@@ -52,7 +52,6 @@ l1 x = Fun (\y -> x \\ y)
 r1 x = Fun (\y -> y / x)
 
 sig1 = [
-  withSize 3,
   withDepth 4,
   withTests 10,
   ["a", "b", "c"] `vars` (undefined :: It),
