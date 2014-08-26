@@ -139,9 +139,12 @@ quickSpec = runTool $ \sig -> do
       univ = concatMap (some2 (map (tagged term))) clss
       reps = map (some2 (tagged term . head)) clss
       eqs = equations clss
-  printf "%d raw equations; %d terms in universe.\n\n"
+  printf "%d raw equations; %d terms in universe.\n"
     (length eqs)
     (length reps)
+  printf "%d generated terms, %d unique schemas.\n\n"
+    (length (usort (map erase univ)))
+    (length (usort (map (skeleton . erase) univ)))
 
   let ctx1 = initial (maxDepth sig) (symbols sig) univ :: Context Crappy.EQ
       ctx2 = initial (maxDepth sig) (symbols sig) univ :: Context E.EQ

@@ -147,6 +147,9 @@ mapConsts f (Var x) = Var x
 mapConsts f (Const x) = Const (f x)
 mapConsts f (App t u) = App (mapConsts f t) (mapConsts f u)
 
+skeleton :: Term -> Term
+skeleton = mapVars (\x -> x { index = 0, name = "_" })
+
 match, match' :: Term -> Term -> Maybe [(Symbol, Term)]
 match pat tm = do
   s <- fmap usort (match' pat tm)
