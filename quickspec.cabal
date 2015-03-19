@@ -1,6 +1,6 @@
 Name:                quickspec
 Version:             0.9.6
-Cabal-version:       >= 1.6
+Cabal-version:       >= 1.8
 Build-type:          Simple
 
 Homepage:            https://github.com/nick8325/quickspec
@@ -39,7 +39,6 @@ Extra-source-files:
   README.asciidoc
   examples/Arith.hs
   examples/Arrays.hs
-  examples/Bools.hs
   examples/Composition.hs
   examples/Heaps.hs
   examples/Lists.hs
@@ -81,4 +80,15 @@ library
 
   Build-depends:
     base < 5, containers, transformers, QuickCheck >= 2.7,
-    random, spoon >= 0.2, array, ghc-prim
+    random, spoon >= 0.2, array, ghc-prim , split
+
+executable hs-hello-world
+  main-is:             test.hs
+  hs-source-dirs:      executable
+  -- other-modules:      
+  build-depends:       base >=4.7 && <4.8, quickspec
+
+
+  Build-depends:
+    base < 5, containers, transformers, QuickCheck >= 2.7,
+    random, spoon >= 0.2, array, ghc-prim 

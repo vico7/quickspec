@@ -95,6 +95,16 @@ uses sig w =
       w' <- constantArgs sig k,
       w == w' ]
 
+
+getSymbols sig = (map name list) `zip` list
+  where sums =  summarise (signature sig)
+        list = (summaryVariables sums ++ (summaryFunctions sums ++ summaryBackground sums))
+
+getVarCon sig = (summaryVariables sums)
+  where sums =  summarise (signature sig)
+
+
+
 data Summary = Summary {
   summaryFunctions :: [Symbol],
   summaryBackground :: [Symbol],

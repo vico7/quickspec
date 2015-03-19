@@ -27,6 +27,7 @@ symbol x arity v = Symbol 0 x arity False False (typeOf v)
 
 instance Show Symbol where
   show = showOp . name
+  --show = showOp . name
 
 instance Eq Symbol where
   (==) = (==) `on` index
@@ -40,6 +41,28 @@ data Term =
   | App Term Term deriving Eq
 
 infixl 5 `App`
+
+groupConst :: [Term] -> [Term]
+groupConst [] = []
+groupConst (x:[]) = [x]
+groupConst (x: (Const y) :xs) =  [App (Const y) x] ++ groupConst xs
+
+comb :: [Term] -> Term
+comb = comb' .reverse
+
+comb' :: [Term] -> Term
+comb' (x:[]) = x
+comb' (x:y:rest) = comb' ((App y x): rest) 
+
+symbolsToTerms :: [Symbol] -> [[Symbol]]-> Term
+symbolsToTerms varCon list  = comb (concatMap (symbolsToTerms' varCon) list)
+
+symbolsToTerms' :: [Symbol] -> [Symbol]-> [Term]
+symbolsToTerms' varCon list  = groupConst termList
+  where termList = map (pickTerm varCon) list
+        pickTerm varCon x = case (x `elem` varCon) of
+                                True -> (Var x)
+                                otherwise -> (Const x)
 
 instance Ord Term where
   compare = comparing stamp
