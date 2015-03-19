@@ -22,6 +22,7 @@ import Data.Monoid
 import Data.Maybe
 import Test.QuickSpec.Utils
 import Test.QuickSpec.Equation
+import Test.QuickSpec.Utils.Typeable
 
 undefinedsSig :: Sig -> Sig
 undefinedsSig sig =
@@ -107,6 +108,7 @@ quickSpec = runTool $ \sig -> do
       univ = concatMap (some2 (map (tagged term))) clss
       reps = map (some2 (tagged term . head)) clss
       eqs = equations clss
+  --ask sig eqs --(universe univ)
   printf "%d raw equations; %d terms in universe.\n\n"
     (length eqs)
     (length reps)
@@ -121,10 +123,9 @@ quickSpec = runTool $ \sig -> do
       (background, foreground) =
         partition isBackground allEqs
       pruned = filter keep
-                 (prune ctx (filter (not . isUndefined) (map erase reps)) id
-                   (background ++ foreground))
+                (prune ctx (filter (not . isUndefined) (map erase reps)) id 
+                  (background ++ foreground))
       eqnFuns (t :=: u) = funs t ++ funs u
-      isGround (t :=: u) = null (vars t) && null (vars u)
       byTarget = innerZip [1 :: Int ..] (partitionBy target pruned)
 
   forM_ byTarget $ \eqs@((_,eq):_) -> do
@@ -134,6 +135,26 @@ quickSpec = runTool $ \sig -> do
     forM_ eqs $ \(i, eq) ->
       printf "%3d: %s\n" i (showEquation sig eq)
     putStrLn ""
+
+
+  putStrLn " =========ASK=======(Ctrl-c to quit)"
+  eq1 <- getLine
+
+  let newEq = stringToEquation eq1 sig 
+  putStrLn "-------Parsed This----------------"
+  putStrLn (show newEq )
+  putStrLn "----------------------------------"
+
+  if (showEquation sig ( newEq) `elem` (map (showEquation sig) (pruned))) 
+    then putStrLn "QuickSpec has already printed this rule" 
+    else do 
+      let repruned = filter keep (prune ctx (filter (not . isUndefined) (map erase reps)) id (pruned ++ [newEq]))
+      if (length pruned) < (length repruned) 
+        then do
+              putStrLn "not printed" 
+
+        else putStrLn "Could be reduced from one of the rules above"
+
 
 sampleList :: StdGen -> Int -> [a] -> [a]
 sampleList g n xs | n >= length xs = xs
